@@ -1,0 +1,1782 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PantryChef - Cook With What You Have</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#fef6ee',
+              100: '#fdecdb',
+              500: '#f97316',
+              600: '#ea580c',
+              700: '#c2410c',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.05);
+      border-radius: 9999px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: rgba(156, 163, 175, 0.5);
+      border-radius: 9999px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: rgba(156, 163, 175, 0.8);
+    }
+    .glass-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(12px);
+    }
+    .dark .glass-card {
+      background: rgba(17, 24, 39, 0.85);
+      backdrop-filter: blur(12px);
+    }
+    .ingredient-badge-enter {
+      animation: popIn 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+    @keyframes popIn {
+      0% { transform: scale(0.8); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+  </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen flex flex-col font-sans transition-colors duration-200">
+
+  <header class="sticky top-0 z-30 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-orange-500 to-amber-500 flex items-center justify-center text-white shadow-md shadow-orange-500/20">
+          <i class="fa-solid fa-utensils text-lg"></i>
+        </div>
+        <div>
+          <span class="font-extrabold text-xl tracking-tight text-slate-900 dark:text-white flex items-center gap-1.5">
+            Pantry<span class="text-orange-500">Chef</span>
+          </span>
+          <p class="text-xs text-slate-500 dark:text-slate-400 hidden sm:block">Cook smart with ingredients you have</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <!-- Quick stats badge -->
+        <div class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-orange-50 dark:bg-orange-950/40 text-orange-700 dark:text-orange-300 text-xs font-semibold border border-orange-200/60 dark:border-orange-800/40">
+          <i class="fa-solid fa-book-open"></i>
+          <span>50 Curated Recipes</span>
+        </div>
+
+        <!-- Pantry items counter pill -->
+        <button onclick="scrollToPantry()" class="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-semibold transition-all">
+          <i class="fa-solid fa-basket-shopping text-orange-500"></i>
+          <span>Pantry: <strong id="header-pantry-count" class="text-orange-600 dark:text-orange-400">0</strong></span>
+        </button>
+
+        <!-- Dark mode toggle -->
+        <button id="theme-toggle" class="w-9 h-9 rounded-xl flex items-center justify-center border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors" title="Toggle Theme">
+          <i class="fa-solid fa-moon dark:hidden"></i>
+          <i class="fa-solid fa-sun hidden dark:block"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+    <!-- Hero Section -->
+    <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-orange-600 via-amber-600 to-rose-600 text-white p-6 sm:p-10 shadow-xl mb-8">
+      <div class="absolute -right-10 -bottom-10 w-72 h-72 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
+      <div class="relative z-10 max-w-2xl">
+        <span class="inline-block px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-xs font-bold tracking-wide uppercase mb-3">Zero Food Waste Assistant</span>
+        <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight mb-3">What's inside your fridge today?</h1>
+        <p class="text-orange-100 text-sm sm:text-base leading-relaxed mb-6">Select or enter the ingredients you already have. We'll instantly match, score, and rank 50 dishes you can make right away.</p>
+        
+        <div class="flex flex-wrap gap-2 text-xs">
+          <span class="bg-black/25 px-3 py-1.5 rounded-lg flex items-center gap-1.5"><i class="fa-solid fa-circle-check text-emerald-300"></i> High Match Priority</span>
+          <span class="bg-black/25 px-3 py-1.5 rounded-lg flex items-center gap-1.5"><i class="fa-solid fa-sliders text-amber-300"></i> Dietary & Time Filters</span>
+          <span class="bg-black/25 px-3 py-1.5 rounded-lg flex items-center gap-1.5"><i class="fa-solid fa-clock text-blue-300"></i> Detailed Step Instructions</span>
+        </div>
+      </div>
+    </div>
+
+    <section id="pantry-section" class="mb-10 bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-7 border border-slate-200 dark:border-slate-800 shadow-sm transition-all">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5 pb-4 border-b border-slate-100 dark:border-slate-800">
+        <div>
+          <h2 class="text-xl font-bold flex items-center gap-2.5">
+            <span class="w-8 h-8 rounded-lg bg-orange-100 dark:bg-orange-950/60 text-orange-600 flex items-center justify-center text-sm font-black">1</span>
+            My Kitchen Pantry
+          </h2>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Add ingredients you have on hand to find matching dishes</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="clearPantry()" class="text-xs font-semibold px-3 py-1.5 text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-all flex items-center gap-1.5">
+            <i class="fa-regular fa-trash-can"></i> Clear All
+          </button>
+          <button onclick="samplePantry()" class="text-xs font-semibold px-3.5 py-1.5 bg-orange-50 dark:bg-orange-950/50 text-orange-700 dark:text-orange-300 hover:bg-orange-100 dark:hover:bg-orange-900/40 rounded-lg transition-all flex items-center gap-1.5 border border-orange-200 dark:border-orange-800/40">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> Quick Fill (Italian/Pasta)
+          </button>
+        </div>
+      </div>
+
+      <!-- Ingredient Input Form -->
+      <div class="flex gap-2 mb-4">
+        <div class="relative flex-1">
+          <i class="fa-solid fa-carrot absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+          <input 
+            type="text" 
+            id="ingredient-input" 
+            placeholder="Type ingredient (e.g., eggs, chicken, garlic, rice, spinach)..." 
+            class="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-400 transition-all"
+            autocomplete="off"
+          >
+          <div id="autocomplete-list" class="hidden absolute top-full left-0 right-0 z-20 mt-1 max-h-48 overflow-y-auto bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl custom-scrollbar text-xs"></div>
+        </div>
+        <button 
+          id="add-ingredient-btn"
+          onclick="addIngredientFromInput()" 
+          class="px-5 py-3 bg-orange-600 hover:bg-orange-700 text-white font-semibold text-sm rounded-2xl transition-all shadow-md shadow-orange-600/20 active:scale-95 flex items-center gap-2"
+        >
+          <i class="fa-solid fa-plus"></i> Add
+        </button>
+      </div>
+
+      <!-- Quick tap common ingredients -->
+      <div class="mb-5">
+        <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+          <i class="fa-solid fa-fire text-amber-500"></i> Popular Pantry Staples (Tap to add/remove)
+        </div>
+        <div id="quick-staples" class="flex flex-wrap gap-1.5 sm:gap-2">
+          <!-- Populated by JavaScript -->
+        </div>
+      </div>
+
+      <!-- Selected Pantry items display -->
+      <div class="bg-slate-50 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 min-h-[70px]">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Currently in your pantry (<span id="pantry-count">0</span> items)</span>
+          <span id="match-summary" class="text-xs font-semibold text-orange-600 dark:text-orange-400"></span>
+        </div>
+        <div id="pantry-chips-container" class="flex flex-wrap gap-2">
+          <p id="empty-pantry-hint" class="text-xs text-slate-400 dark:text-slate-500 italic py-2">Your pantry is empty! Add ingredients from above or click popular staples.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <!-- Search inside recipes -->
+      <div class="relative w-full md:w-80">
+        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+        <input 
+          type="text" 
+          id="recipe-search" 
+          placeholder="Search recipes or dishes..." 
+          oninput="handleRecipeSearch()"
+          class="w-full pl-9 pr-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+        >
+      </div>
+
+      <!-- Filter dropdowns -->
+      <div class="flex flex-wrap items-center gap-2 text-xs">
+        <!-- Cuisine / Category -->
+        <select id="cuisine-filter" onchange="renderRecipes()" class="px-3 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl font-medium text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500">
+          <option value="all">All Cuisines (All 50)</option>
+          <option value="Italian">Italian</option>
+          <option value="Asian">Asian & Stir-Fry</option>
+          <option value="Mexican">Mexican & Tex-Mex</option>
+          <option value="Mediterranean">Mediterranean & Greek</option>
+          <option value="American">American Comfort</option>
+          <option value="Indian">Indian & Curries</option>
+          <option value="Breakfast">Breakfast & Brunch</option>
+          <option value="Dessert">Dessert & Sweets</option>
+        </select>
+
+        <!-- Time filter -->
+        <select id="time-filter" onchange="renderRecipes()" class="px-3 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl font-medium text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500">
+          <option value="all">Any Cook Time</option>
+          <option value="15">Under 15 mins</option>
+          <option value="30">Under 30 mins</option>
+          <option value="45">Under 45 mins</option>
+        </select>
+
+        <!-- Match Filter -->
+        <select id="match-filter" onchange="renderRecipes()" class="px-3 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl font-medium text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500">
+          <option value="all">All Match Levels</option>
+          <option value="ready">100% Ready to Cook</option>
+          <option value="missing1">Missing ≤ 1 Ingredient</option>
+          <option value="missing2">Missing ≤ 2 Ingredients</option>
+        </select>
+
+        <!-- Sort by -->
+        <select id="sort-select" onchange="renderRecipes()" class="px-3 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl font-medium text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500">
+          <option value="match-desc">Sort: Highest Match %</option>
+          <option value="time-asc">Sort: Fastest Cook Time</option>
+          <option value="diff-asc">Sort: Easiest Difficulty</option>
+          <option value="title-asc">Sort: Alphabetical (A-Z)</option>
+        </select>
+      </div>
+    </section>
+
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+        <span>Suggested Recipes</span>
+        <span id="results-count-badge" class="text-xs px-2.5 py-0.5 rounded-full bg-slate-200 dark:bg-slate-800 font-semibold text-slate-700 dark:text-slate-300">0 found</span>
+      </h3>
+      <div class="text-xs text-slate-500">
+        Click any recipe card to see instructions & missing ingredients
+      </div>
+    </div>
+
+    <div id="recipes-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      <!-- Recipe cards injected here -->
+    </div>
+
+    <!-- Empty State for no matching recipes -->
+    <div id="no-recipes-state" class="hidden text-center py-16 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-8">
+      <div class="w-16 h-16 bg-orange-100 dark:bg-orange-950/60 text-orange-600 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl">
+        <i class="fa-solid fa-bowl-food"></i>
+      </div>
+      <h4 class="font-bold text-lg text-slate-800 dark:text-white mb-1">No recipes found</h4>
+      <p class="text-sm text-slate-500 max-w-sm mx-auto mb-5">Try relaxing your cuisine filters, search term, or add more staples to your pantry.</p>
+      <button onclick="resetFilters()" class="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-xl text-xs font-semibold">Reset Filters</button>
+    </div>
+  </main>
+
+  <div id="recipe-modal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+    <div class="bg-white dark:bg-slate-900 w-full max-w-2xl rounded-3xl overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-800 my-8 transition-transform transform duration-300 scale-95 opacity-0" id="recipe-modal-box">
+      <!-- Modal Header Banner -->
+      <div class="relative h-56 sm:h-64 overflow-hidden">
+        <img id="modal-image" src="" alt="Recipe image" class="w-full h-full object-cover">
+        <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent"></div>
+        <button onclick="closeModal()" class="absolute top-4 right-4 w-9 h-9 rounded-full bg-black/50 text-white hover:bg-black/80 flex items-center justify-center transition-all">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+        <div class="absolute bottom-4 left-5 right-5 text-white">
+          <div class="flex items-center gap-2 mb-2">
+            <span id="modal-category" class="px-2.5 py-0.5 bg-orange-500 rounded-full text-xs font-bold uppercase tracking-wider"></span>
+            <span id="modal-match-badge" class="px-2.5 py-0.5 rounded-full text-xs font-bold"></span>
+          </div>
+          <h2 id="modal-title" class="text-2xl sm:text-3xl font-extrabold tracking-tight"></h2>
+        </div>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="p-6 space-y-6 max-h-[65vh] overflow-y-auto custom-scrollbar">
+        <!-- Key Meta -->
+        <div class="grid grid-cols-3 gap-3 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-2xl text-center">
+          <div>
+            <span class="text-[11px] uppercase font-bold text-slate-400 block">Cook Time</span>
+            <span id="modal-time" class="font-extrabold text-sm sm:text-base text-slate-800 dark:text-slate-200"></span>
+          </div>
+          <div class="border-x border-slate-200 dark:border-slate-700">
+            <span class="text-[11px] uppercase font-bold text-slate-400 block">Difficulty</span>
+            <span id="modal-difficulty" class="font-extrabold text-sm sm:text-base text-slate-800 dark:text-slate-200"></span>
+          </div>
+          <div>
+            <span class="text-[11px] uppercase font-bold text-slate-400 block">Servings</span>
+            <span id="modal-servings" class="font-extrabold text-sm sm:text-base text-slate-800 dark:text-slate-200">2-4</span>
+          </div>
+        </div>
+
+        <!-- Description -->
+        <p id="modal-desc" class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed"></p>
+
+        <!-- Ingredients breakdown -->
+        <div>
+          <h4 class="font-bold text-base mb-2 text-slate-900 dark:text-white flex items-center justify-between">
+            <span>Ingredients Checklist</span>
+            <span id="modal-ing-ratio" class="text-xs font-semibold px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"></span>
+          </h4>
+          <p class="text-xs text-slate-400 mb-3">Green items are already in your pantry. Tap missing items to add them directly.</p>
+          <ul id="modal-ingredients-list" class="space-y-2">
+            <!-- Injected by script -->
+          </ul>
+        </div>
+
+        <!-- Step by Step Instructions -->
+        <div>
+          <h4 class="font-bold text-base mb-3 text-slate-900 dark:text-white flex items-center gap-2">
+            <i class="fa-solid fa-list-check text-orange-500"></i> Step-by-Step Instructions
+          </h4>
+          <ol id="modal-steps-list" class="space-y-3">
+            <!-- Injected by script -->
+          </ol>
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="p-4 bg-slate-50 dark:bg-slate-800/80 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
+        <button onclick="copyRecipeIngredients()" class="text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-orange-500 flex items-center gap-1.5 px-3 py-2 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-all">
+          <i class="fa-regular fa-copy"></i> Copy Shopping List
+        </button>
+        <button onclick="closeModal()" class="px-5 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-orange-600/20">
+          Done
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notification Toast -->
+  <div id="toast" class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none px-4 py-2.5 bg-slate-900 text-white dark:bg-white dark:text-slate-900 rounded-xl text-xs font-bold shadow-xl flex items-center gap-2">
+    <i class="fa-solid fa-check text-orange-500"></i>
+    <span id="toast-message">Notification</span>
+  </div>
+
+  <script>
+    const RECIPES = [
+      {
+        id: 1,
+        title: "Classic Spaghetti Carbonara",
+        cuisine: "Italian",
+        time: 20,
+        difficulty: "Easy",
+        image: "https://images.unsplash.com/photo-1612874742237-6526221588e3?auto=format&fit=crop&w=700&q=80",
+        description: "An authentic Roman classic made rich and creamy with eggs, cheese, cured pork, and black pepper.",
+        ingredients: ["spaghetti", "eggs", "bacon", "parmesan", "black pepper", "garlic"],
+        steps: [
+          "Boil spaghetti in generously salted water until al dente.",
+          "In a small bowl, whisk together whole eggs, yolk, and finely grated parmesan.",
+          "Sauté diced bacon or pancetta in a skillet until crisp; toss in minced garlic for 30 seconds.",
+          "Remove pan from heat, add drained pasta, then quickly pour egg mixture while tossing vigorously to form a creamy sauce without scrambling.",
+          "Season generously with freshly cracked black pepper and serve hot."
+        ]
+      },
+      {
+        id: 2,
+        title: "Garlic Butter Tomato Pasta",
+        cuisine: "Italian",
+        time: 15,
+        difficulty: "Easy",
+        image: "https://images.unsplash.com/photo-1551183053-bf91a1d81141?auto=format&fit=crop&w=700&q=80",
+        description: "A fast, comforting skillet pasta with blistered cherry tomatoes, melted garlic butter, and fresh basil.",
+        ingredients: ["pasta", "cherry tomatoes", "garlic", "butter", "olive oil", "parmesan", "basil"],
+        steps: [
+          "Cook pasta according to box instructions; preserve 1/2 cup pasta water.",
+          "Melt butter with olive oil in a wide pan over medium heat.",
+          "Add cherry tomatoes and minced garlic, sautéing until tomatoes burst and soften.",
+          "Toss pasta and a splash of reserved pasta water into the sauce.",
+          "Finish with grated parmesan, chopped basil, salt, and pepper."
+        ]
+      },
+      {
+        id: 3,
+        title: "Quick Chicken Fried Rice",
+        cuisine: "Asian",
+        time: 18,
+        difficulty: "Easy",
+        image: "https://images.unsplash.com/photo-1603133872878-684f208fb84b?auto=format&fit=crop&w=700&q=80",
+        description: "Savory fried rice using leftover cooked rice, diced tender chicken, eggs, and green scallions.",
+        ingredients: ["rice", "chicken", "eggs", "soy sauce", "garlic", "onion", "sesame oil"],
+        steps: [
+          "Dice chicken breast into bite-sized cubes and season with salt and pepper.",
+          "Heat sesame oil in a wok or large pan; sear chicken until cooked through and remove.",
+          "Pour beaten eggs into the wok and soft scramble; set aside with chicken.",
+          "Sauté minced onion and garlic, then add cold cooked rice, breaking up clumps.",
+          "Drizzle with soy sauce, return chicken and egg, and stir-fry over high heat for 3 minutes."
+        ]
+      },
+      {
+        id: 4,
+        title: "Mediterranean Shakshuka",
+        cuisine: "Mediterranean",
+        time: 25,
+        difficulty: "Easy",
+        image: "https://images.unsplash.com/photo-1590412200988-a436970781fa?auto=format&fit=crop&w=700&q=80",
+        description: "Gently poached eggs in a vibrant spiced tomato, bell pepper, and onion skillet sauce.",
+        ingredients: ["eggs", "tomatoes", "bell pepper", "onion", "garlic", "olive oil", "cumin"],
+        steps: [
+          "Heat olive oil in a skillet and cook sliced onions and bell peppers until tender.",
+          "Add minced garlic and ground cumin; stir until fragrant for 1 minute.",
+          "Pour in crushed tomatoes, simmer for 10 minutes until sauce thickens.",
+          "Use a spoon to create small wells in the sauce and crack eggs gently into each.",
+          "Cover and simmer on low heat for 5-8 minutes until egg whites are set and yolks are runny."
+        ]
+      },
+      {
+        id: 5,
+        title: "Creamy Garlic Parmesan Chicken",
+        cuisine: "American",
+        time: 25,
+        difficulty: "Medium",
+        image: "https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?auto=format&fit=crop&w=700&q=80",
+        description: "Pan-seared golden chicken cutlets bathed in a velvety garlic and parmesan cream reduction.",
+        ingredients: ["chicken", "heavy cream", "garlic", "parmesan", "butter", "olive oil", "spinach"],
+        steps: [
+          "Season chicken breasts with salt and pepper, dusting lightly with flour if desired.",
+          "Sear in olive oil and 1 tbsp butter over medium-high heat for 6 mins per side until golden; set aside.",
+          "In the same pan, melt remaining butter and sauté minced garlic.",
+          "Pour in heavy cream and grated parmesan, stirring until smooth and simmering.",
+          "Add fresh spinach until wilted, then return chicken to coat in the luxurious sauce."
+        ]
+      },
+      {
+        id: 6,
+        title: "Cheesy Potato & Onion Frittata",
+        cuisine: "Breakfast",
+        time: 25,
+        difficulty: "Easy",
+        image: "https://images.unsplash.com/photo-1525351484163-7529414344d8?auto=format&fit=crop&w=700&q=80",
+        description: "A hearty Spanish-style omelette filled with tender sautéed potatoes, caramelized onions, and melted cheddar.",
+        ingredients: ["eggs", "potatoes", "onion", "cheddar", "butter", "olive oil", "black pepper"],
+        steps: [
+          "Finely slice potatoes and onions.",
+          "Sauté potatoes in olive oil and butter on low-medium heat until tender and lightly browned.",
+          "Add sliced onions and cook until soft and sweet.",
+          "Whisk eggs with shredded cheddar, salt, and pepper; pour evenly over the potatoes.",
+          "Cook over low heat until edges set, then flip or broil under the oven rack for 3 minutes."
+        ]
+      },
+      {
+        id: 7,
+        title: "Crispy Chicken Quesadillas",
+        cuisine: "Mexican",
+        time: 15,
+        difficulty: "Easy",
+        image: "https://images.unsplash.com/photo-1584178044738-4f96d21cbdfa?auto=format&fit=crop&w=700&q=80",
+        description: "Golden toasted flour tortillas stuffed with juicy seasoned chicken and molten cheese.",
+        ingredients: ["tortillas", "chicken", "cheddar", "onion", "bell pepper", "olive oil"],
+        steps: [
+          "Sauté sliced chicken, bell pepper, and onions in olive oil until fully cooked.",
+          "Place a tortilla on a dry hot skillet over medium heat.",
+          "Sprinkle cheese on one half, pile on chicken filling, top with more cheese, and fold in half.",
+          "Cook for 2-3 minutes per side until tortilla is golden-brown and crispy, and cheese is melted.",
+          "Slice into wedges and serve with salsa or sour cream."
+        ]
+      },
+      {
+        id: 8,
+        title: "Creamy Tomato Basil Soup",
+        cuisine: "American",
+        time: 20,
+        difficulty: "Easy",
+        image: "https://images.unsplash.com/photo-1547592166-23ac45744acd?auto=format&fit=crop&w=700&q=80",
+        description: "Warm, velvety homemade tomato soup balanced with aromatic basil and a splash of heavy cream.",
+        ingredients: ["tomatoes", "onion", "garlic", "butter", "heavy cream", "basil", "black pepper"],
+        steps: [
+          "Melt butter in a pot, add chopped onions and garlic, and sweat until translucent.",
+          "Add canned or freshly chopped ripe tomatoes with their juice and simmer for 15 minutes.",
+          "Stir in fresh basil leaves and blend until velvety smooth using an immersion blender.",
+          "Stir in heavy cream, season with salt and pepper, and simmer for 2 additional minutes."
+        ]
+      },
+      {
+        id: 9,
+        title: "Garlic Butter Steak Bites with Potatoes",
+        cuisine: "American",
+        time: 25,
+        difficulty: "Medium",
+        image: "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=700&q=80",
+        description: "Tender sirloin steak cubed and seared in rich herb butter alongside crispy golden diced potatoes.",
+        ingredients: ["beef", "potatoes", "garlic", "butter", "olive oil", "rosemary"],
+        steps: [
+          "Dice potatoes small and boil in salted water for 5 minutes, then drain.",
+          "In a hot skillet with olive oil, fry diced potatoes until golden and crispy; set aside.",
+          "Cut beef into bite-sized cubes and season with salt and pepper.",
+          "Sear steak cubes in the smoking hot skillet for 3-4 minutes to develop a deep crust.",
+          "Drop in butter, crushed garlic, and rosemary; baste beef and potatoes together for 1 minute."
+        ]
+      },
+      {
+        id: 10,
+        title: "Greek Lemon Herb Rice",
+        cuisine: "Mediterranean",
+        time: 20,
+        difficulty: "Easy",
+        image: "https://images.unsplash.com/photo-1512058564366-18510be2db19?auto=format&fit=crop&w=700&q=80",
+        description: "Fluffy basmati rice infused with fragrant lemon zest, garlic, butter, and parsley.",
+        ingredients: ["rice", "lemon", "garlic", "butter", "olive oil", "parsley"],
+        steps: [
+          "Rinse rice under cold water until clear.",
+          "In a saucepan, sauté minced garlic in olive oil and 1 tbsp butter for 1 minute.",
+          "Add rinsed rice and toast grains lightly for 2 minutes.",
+          "Pour in 2 cups of water or broth, bring to a boil, then cover and simmer on low for 15 minutes.",
+          "Fluff with fork, stir in fresh lemon juice, lemon zest, remaining butter, and chopped parsley."
+        ]
+      },
+      {
+        id: 11,
+        title: "Golden Chicken Curry",
+        cuisine: "Indian",
+        time: 30,
+        difficulty: "Medium",
+        image: "https://images.unsplash.com/photo-1565557623262-b51c2513a641?auto=format&fit=crop&w=700&q=80",
+        description: "Comforting Indian curry with tender chicken pieces, aromatic curry spices, and creamy coconut milk.",
+        ingredients: ["chicken", "coconut milk", "onion", "garlic", "ginger", "curry powder", "tomatoes"],
+        steps: [
+          "Heat oil in a heavy pot; sauté diced onions, minced garlic, and grated ginger until fragrant.",
+          "Stir in curry powder and toast spices for 45 seconds.",
+          "Add diced chicken breast and sear until lightly browned.",
+          "Add diced tomatoes and coconut milk; bring to a gentle boil.",
+          "Cover and simmer on low heat for 18-20 minutes until chicken is tender and sauce is luscious."
+        ]
+      },
+      {
+        id: 12,
+        title: "Classic Guacamole & Chips",
+        cuisine: "Mexican",
+        time: 10,
+        difficulty: "Easy",
+        image: "https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=700&q=80",
+        description: "Fresh, chunky avocado dip mixed with lime, diced red onion, tomatoes, and cilantro.",
+        ingredients: ["avocado", "lime", "onion", "tomatoes", "cilantro", "tortilla chips"],
+        steps: [
+          "Cut avocados in half, remove seeds, and scoop flesh into a bowl.",
+          "Mash with a fork to your desired texture.",
+          "Fold in finely diced onions, diced tomatoes, chopped cilantro, and fresh lime juice.",
+          "Season generously with salt to bring out flavors. Serve immediately with crispy chips."
+        ]
+      },
+      {
+        id: 13,
+        title: "Crispy Garlic Roasted Potatoes",
+        cuisine: "American",
+        time: 35,
+        difficulty: "Easy",
+        image: "https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&w=700&q=80",
+        description: "Oven-roasted potato wedges with ultra-crispy edges, seasoned with garlic and rosemary.",
+        ingredients: ["potatoes", "garlic", "olive oil", "rosemary", "black pepper"],
+        steps: [
+          "Preheat oven to 425°F (220°C).",
+          "Wash potatoes and slice into bite-sized wedges.",
+          "Toss potatoes with plenty of olive oil, minced garlic, chopped rosemary, salt, and black pepper.",
+          "Spread evenly on a baking sheet in a single layer with flat sides down.",
+          "Roast for 30-35 minutes, flipping once halfway, until deeply golden and crispy."
+        ]
+      },
+      {
+        id: 14,
+        title: "Tuna Salad Lettuce Wraps",
+        cuisine: "American",
+        time: 10,
+        difficulty: "Easy",
+        image: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=700&q=80",
+        description: "Light and crunchy tuna salad with creamy mayo, celery, and mustard wrapped in crisp lettuce leaves.",
+        ingredients: ["tuna", "mayonnaise", "mustard", "celery", "lemon", "black pepper"],
+        steps: [
+          "Drain canned tuna thoroughly and place into a mixing bowl.",
+          "Add mayonnaise, a teaspoon of Dijon mustard, finely diced celery, and lemon juice.",
+          "Flake and combine everything with a fork until well mixed.",
+          "Season with salt and pepper; spoon into large crisp lettuce cups."
+        ]
+      },
+      {
+        id: 15,
+        title: "Creamy Fettuccine Alfredo",
+        cuisine: "Italian",
+        time: 18,
+        difficulty: "Easy",
+        image: "https://images.unsplash.com/photo-1645112411341-6c4fd023714a?auto=format&fit=crop&w=700&q=80",
+        description: "Silky pasta draped in a rich sauce of melted butter, heavy cream, garlic, and fresh parmesan.",
+        ingredients: ["pasta", "butter", "heavy cream", "parmesan", "garlic", "black pepper"],
+        steps: [
+          "Cook pasta in salted water until al dente.",
+          "In a deep saucepan, melt butter over medium-low heat; add minced garlic for 1 minute.",
+          "Pour in heavy cream and let simmer gently for 4 minutes.",
+          "Whisk in freshly grated parmesan cheese until the sauce turns thick and glossy.",
+          "Toss hot pasta into the alfredo sauce and finish with black pepper."
+        ]
+      },
+      {
+        id: 16,
+        title: "Classic French Toast",
+        cuisine: "Breakfast",
+        time: 12,
+        difficulty: "Easy",
+        image: "https://images.unsplash.com/photo-1484723091739-30a097e8f929?auto=format&fit=crop&w=700&q=80",
+        description: "Golden brioche or sandwich bread soaked in a spiced egg-milk batter and pan-fried with butter.",
+        ingredients: ["bread", "eggs", "milk", "cinnamon", "butter", "maple syrup"],
+        steps: [
+          "In a shallow dish, whisk together eggs, milk, cinnamon, and a pinch of salt.",
+          "Melt butter in a non-stick skillet over medium heat.",
+          "Dip thick bread slices into the egg custard, coating both sides for 5 seconds.",
+          "Fry for 3 minutes on each side until golden and slightly puffed.",
+          "Serve warm with a drizzle of maple syrup."
+        ]
+      },
+      {
+        id: 17,
+        title: "Vegetable Stir-Fry with Soy Glaze",
+        cuisine: "Asian",
+        time: 15,
+        difficulty: "Easy",
+        image: "https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=700&q=80",
+        description: "Crisp broccoli, bell peppers, and carrots tossed in a quick savory garlic-soy glaze.",
+        ingredients: ["broccoli", "bell pepper", "carrot", "soy sauce", "garlic", "sesame oil"],
+        steps: [
+          "Slice broccoli into small florets, bell peppers into strips, and carrots into thin rounds.",
+          "Heat sesame oil in a large wok over high heat.",
+          "Add carrots and broccoli with 2 tbsp of water, stir-frying for 3 minutes.",
+          "Toss in bell peppers and minced garlic, stir-frying for another 2 minutes until crisp-tender.",
+          "Drizzle with soy sauce, toss well to coat, and serve over rice or noodles."
+        ]
+      },
+      {
+        id: 18,
+        title: "Fluffy Buttermilk Pancakes",
+        cuisine: "Breakfast",
+        time: 15,
+        difficulty: "Easy",
+        image: "https://images.unsplash.com/photo-1528207776546-365bb710ee93?auto=format&fit=crop&w=700&q=80",
+        description: "Pillowy, tender homemade pancakes cooked golden brown on the griddle.",
+        ingredients: ["flour", "milk", "eggs", "butter", "sugar", "baking powder"],
+        steps: [
+          "In a bowl, whisk flour, sugar, baking powder, and a pinch of salt.",
+          "In a measuring jug, whisk milk, egg, and melted butter.",
+          "Fold wet ingredients into dry ingredients gently until just combined (leave small lumps).",
+          "Melt a dab of butter on a hot pan; ladle 1/4 cup batter for each pancake.",
+          "Cook until bubbles form on top, flip, and cook 1 more minute until golden."
+        ]
+      },
+      {
+        id: 19,
+        title: "Creamy Mushroom Risotto",
+        cuisine: "Italian",
+        time: 30,
+        difficulty: "Hard",
+        image: "https://images.unsplash.com/photo-1633964913295-ceb43826e7c9?auto=format&fit=crop&w=700&q=80",
+        description: "Arborio rice slowly cooked with rich broth, tender sautéed mushrooms, butter, and parmesan.",
+        ingredients: ["rice", "mushrooms", "butter", "parmesan", "garlic", "onion", "olive oil"],
+        steps: [
+          "Sauté sliced mushrooms in olive oil until browned; season and set aside.",
+          "In the same pot, melt butter and cook finely diced onions and garlic until translucent.",
+          "Add rice, toasting grains for 2 minutes.",
+          "Slowly ladle warm broth (or water) one cup at a time, stirring constantly until absorbed.",
+          "Once rice is creamy and al dente, fold in sautéed mushrooms, butter, and parmesan."
+        ]
+      },
+      {
+        id: 20,
+        title: "Garlic Butter Shrimp Scampi",
+        cuisine: "Italian",
+        time: 15,
+        difficulty: "Easy",
+        image: "https://images.unsplash.com/photo-1559742811-82286364ceaf?auto=format&fit=crop&w=700&q=80",
+        description: "Succulent shrimp sautéed in a rich garlic butter sauce spiked with lemon and white pepper.",
+        ingredients: ["shrimp", "garlic", "butter", "lemon", "olive oil", "parsley"],
+        steps: [
+          "Heat olive oil and 2 tbsp butter in a skillet over medium-high heat.",
+          "Add peeled shrimp in a single layer and cook for 1.5 minutes per side until pink.",
+          "Toss in generous minced garlic, cooking for 1 minute until aromatic.",
+          "Finish with fresh lemon juice, remaining cold butter, and freshly chopped parsley.",
+          "Serve hot on its own or tossed over pasta."
+        ]
+      },
+      {
+        id: 21,
+        title: "Cheesy Baked Macaroni",
+        cuisine: "American",
+        time: 30,
+        difficulty: "Easy",
+        image: "https://images.unsplash.com/photo-1543339308-43e59d6b73a6?auto=format&fit=crop&w=700&q=80",
+        description: "Classic macaroni baked in a velvety homemade cheddar cheese sauce with a bubbly top.",
+        ingredients: ["pasta", "cheddar", "milk", "butter", "flour", "black pepper"],
+        steps: [
+          "Cook macaroni pasta until just shy of al dente; drain.",
+          "Melt butter in a pot, whisk in flour for 1 minute to create a roux.",
+          "Slowly pour in milk while whisking constantly until smooth and bubbling.",
+          "Remove heat, fold in 3/4 of shredded cheddar cheese until completely melted.",
+          "Stir pasta into cheese sauce, top with remaining cheese, and broil in the oven for 5 minutes until bubbly."
+        ]
+      },
+      {
+        id: 22,
+        title: "Crispy Honey Garlic Chicken",
+        cuisine: "Asian",
+        time: 20,
+        difficulty: "Easy",
+        image: "https://images.unsplash.com/photo-1527477244700-bfca7d316277?auto=format&fit=crop&w=700&q=80",
+        description: "Golden pan-crisped chicken pieces glazed in a sweet, sticky honey, garlic, and soy sauce reduction.",
+        ingredients: ["chicken", "honey", "garlic", "soy sauce", "butter", "olive oil"],
+        steps: [
+          "Cut chicken into bite-sized pieces and season with salt and pepper.",
+          "Heat olive oil in a pan and sear chicken until golden brown and cooked through.",
+          "Lower heat, drop in butter and minced garlic, sautéing for 1 minute.",
+          "Pour in honey and soy sauce, simmering until sauce reduces into a thick sticky glaze.",
+          "Toss chicken thoroughly in the glaze and serve immediately."
+        ]
+      },
+      {
+        id: 23,
+        title: "Avocado Toast with Poached Egg",
+        cuisine: "Breakfast",
+        time: 10,
+        difficulty: "Easy",
+        image: "https://images.unsplash.com/photo-1525351484163-7529414344d8?auto=format&fit=crop&w=700&q=80",
+        description: "Crusty toasted bread topped with mashed lemon avocado, chili flakes, and a runny poached egg.",
+        ingredients: ["bread", "avocado", "eggs", "lemon", "olive oil", "black pepper"],
+        steps: [
+          "Toast bread slices until golden brown and firm.",
+          "Mash ripe avocado with lemon juice, salt, and black pepper.",
+          "Gently poach eggs in barely simmering water with a dash of vinegar for 3-4 minutes.",
+          "Spread mashed avocado generously onto the toast.",
+          "Crown with the warm poached egg and a drizzle of olive oil."
+        ]
+      },
+      {
+        id: 24,
+        title: "Loaded Baked Potato Soup",
+        cuisine: "American",
+        time: 30,
+        difficulty: "Medium",
+        image: "https://images.unsplash.com/photo-1547592166-23ac45744acd?auto=format&fit=crop&w=700&q=80",
+        description: "Comfort food in a bowl: creamy potato soup topped with crisp bacon, cheddar cheese, and chives.",
+        ingredients: ["potatoes", "bacon", "cheddar", "milk", "butter", "flour", "onion"],
+        steps: [
+          "Cook bacon in a large pot until crispy; remove and reserve drippings.",
+          "Sauté diced onions in butter and bacon drippings, then stir in flour for 1 minute.",
+          "Pour in milk and simmer while stirring until sauce thickens.",
+          "Add peeled and cubed potatoes; cook covered for 15-20 minutes until fork tender.",
+          "Mash half the potatoes for thickness, stir in shredded cheddar, and top with bacon bits."
+        ]
+      },
+      {
+        id: 25,
+        title: "Greek Salad with Feta",
+        cuisine: "Mediterranean",
+        time: 10,
+        difficulty: "Easy",
+        image: "https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=700&q=80",
+        description: "Crisp cucumbers, ripe tomatoes, red onions, and rich feta cheese dressed with oregano and olive oil.",
+        ingredients: ["cucumber", "tomatoes", "onion", "feta", "olive oil", "black pepper"],
+        steps: [
+          "Chop cucumbers and tomatoes into bite-sized chunks.",
+          "Thinly slice red onions.",
+          "Toss vegetables together in a salad bowl with extra virgin olive oil, salt, and pepper.",
+          "Top with thick slices or crumbles of Greek feta cheese and dried oregano."
+        ]
+      },
+      {
+        id: 26,
+        title: "One-Pot Lemon Garlic Chicken Rice",
+        cuisine: "Mediterranean",
+        time: 35,
+        difficulty: "Medium",
+        image: "https://images.unsplash.com/photo-1512058564366-18510be2db19?auto=format&fit=crop&w=700&q=80",
+        description: "Savory chicken thighs browned and simmered over fragrant garlicky lemon rice in a single skillet.",
+        ingredients: ["chicken", "rice", "lemon", "garlic", "onion", "olive oil", "parsley"],
+        steps: [
+          "Season chicken with salt, pepper, and lemon zest; sear in olive oil until golden on both sides; remove.",
+          "In the same skillet, sauté chopped onion and minced garlic.",
+          "Add dry rice, stirring to coat with the pan juices.",
+          "Add 2 cups of water and lemon juice, bring to a boil, then nestle the chicken thighs back into the rice.",
+          "Cover with lid and simmer on low for 20 minutes until rice has absorbed liquid and chicken is cooked."
+        ]
+      },
+      {
+        id: 27,
+        title: "Beef & Cheese Tacos",
+        cuisine: "Mexican",
+        time: 20,
+        difficulty: "Easy",
+        image: "https://images.unsplash.com/photo-1565299585323-38d6b0865b47?auto=format&fit=crop&w=700&q=80",
+        description: "Crispy taco shells loaded with spiced ground beef, melted cheddar cheese, and fresh diced tomatoes.",
+        ingredients: ["ground beef", "tortillas", "cheddar", "onion", "garlic", "tomatoes", "cumin"],
+        steps: [
+          "Brown ground beef with diced onion and garlic in a skillet; drain excess grease.",
+          "Season beef with cumin, chili powder, salt, and black pepper; stir with 2 tbsp water.",
+          "Warm taco shells or small tortillas.",
+          "Assemble tacos by layering spiced beef, freshly grated cheddar, and diced tomatoes."
+        ]
+      },
+      {
+        id: 28,
+        title: "Simple Egg Drop Soup",
+        cuisine: "Asian",
+        time: 10,
+        difficulty: "Easy",
+        image: "https://images.unsplash.com/photo-1547592166-23ac45744acd?auto=format&fit=crop&w=700&q=80",
+        description: "Delicate and warm broth with silky egg ribbons, sesame oil, and scallions.",
+        ingredients: ["eggs", "soy sauce", "sesame oil", "garlic", "ginger", "cornstarch"],
+        steps: [
+          "Bring 3 cups of water or broth to a boil with minced ginger and garlic.",
+          "Stir in soy sauce and a pinch of white pepper.",
+          "Whisk 1 tbsp cornstarch with 2 tbsp cold water; pour into soup to create a silky body.",
+          "Slowly pour beaten eggs in a thin stream while gently swirling soup with a spoon in a clockwise circle.",
+          "Drizzle with sesame oil and serve steaming hot."
+        ]
+      },
+      {
+        id: 29,
+        title: "Cheesy Garlic Bread",
+        cuisine: "Italian",
+        time: 12,
+        difficulty: "Easy",
+        image: "https://images.unsplash.com/photo-1573140247632-f8fd74997d5c?auto=format&fit=crop&w=700&q=80",
+        description: "Baguette or loaf slathered in roasted garlic butter and blanketed with bubbly mozzarella and parmesan.",
+        ingredients: ["bread", "butter", "garlic", "mozzarella", "parmesan", "parsley"],
+        steps: [
+          "Preheat oven or broiler to 400°F (200°C).",
+          "Slice baguette or crusty bread in half lengthwise.",
+          "Mix softened butter with minced garlic, parsley, and salt; spread generously over bread.",
+          "Top with plenty of shredded mozzarella and parmesan cheese.",
+          "Bake for 8-10 minutes until cheese is melted and bubbling with golden brown spots."
+        ]
+      },
+      {
+        id: 30,
+        title: "Creamy Spinach Dip",
+        cuisine: "American",
+        time: 15,
+        difficulty: "Easy",
+        image: "https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=700&q=80",
+        description: "Warm, rich dip made with sautéed spinach, melted cream cheese, parmesan, and garlic.",
+        ingredients: ["spinach", "cream cheese", "garlic", "parmesan", "butter", "black pepper"],
+        steps: [
+          "Melt butter in a skillet, add minced garlic and cook for 30 seconds.",
+          "Add chopped spinach and sauté until completely wilted; squeeze out excess moisture if needed.",
+          "Lower heat, add softened cream cheese and stir until completely melted and smooth.",
+          "Fold in grated parmesan and black pepper.",
+          "Serve warm with chips, toasted bread, or vegetable sticks."
+        ]
+      },
+      {
+        id: 31,
+        title: "Crispy Beef Stir-Fry",
+        cuisine: "Asian",
+        time: 20,
+        difficulty: "Medium",
+        image: "https://images.unsplash.com/photo-1512058564366-18510be2db19?auto=format&fit=crop&w=700&q=80",
+        description: "Tender beef strips flashed in a smoking hot wok with bell peppers, soy sauce, and sesame.",
+        ingredients: ["beef", "bell pepper", "onion", "soy sauce", "garlic", "sesame oil", "cornstarch"],
+        steps: [
+          "Slice beef thinly across the grain and toss with 1 tbsp soy sauce and 1 tbsp cornstarch.",
+          "Heat sesame oil in wok until almost smoking.",
+          "Sear beef quickly in batches for 2 minutes and remove.",
+          "Toss in sliced onions and bell peppers, stir-frying for 2-3 minutes.",
+          "Return beef, pour remaining soy sauce and garlic, tossing to coat in sauce."
+        ]
+      },
+      {
+        id: 32,
+        title: "Classic Grilled Cheese Sandwich",
+        cuisine: "American",
+        time: 10,
+        difficulty: "Easy",
+        image: "https://images.unsplash.com/photo-1528735602780-2552fd46c7af?auto=format&fit=crop&w=700&q=80",
+        description: "The ultimate comfort sandwich: golden, buttery, crispy bread with strings of melted cheese.",
+        ingredients: ["bread", "cheddar", "butter"],
+        steps: [
+          "Generously butter one side of each bread slice.",
+          "Place one slice butter-side down in a medium skillet over medium-low heat.",
+          "Layer thick slices of cheddar cheese on top, and cap with the second slice butter-side up.",
+          "Cook for 3-4 minutes until underside is deeply golden.",
+          "Flip carefully and cook the other side until cheese is completely melted."
+        ]
+      },
+      {
+        id: 33,
+        title: "Rich Chocolate Mug Cake",
+        cuisine: "Dessert",
+        time: 5,
+        difficulty: "Easy",
+        image: "https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=700&q=80",
+        description: "A moist, decadent chocolate cake prepared and microwaved inside a ceramic mug in under 2 minutes.",
+        ingredients: ["flour", "sugar", "cocoa powder", "milk", "butter", "baking powder"],
+        steps: [
+          "In a microwave-safe mug, whisk flour, sugar, cocoa powder, baking powder, and a tiny pinch of salt.",
+          "Add milk and melted butter; mix thoroughly with a fork until batter is smooth.",
+          "Microwave on high for 70 to 80 seconds.",
+          "Allow to cool for 2 minutes before enjoying warm."
+        ]
+      },
+      {
+        id: 34,
+        title: "Spicy Chickpea Curry",
+        cuisine: "Indian",
+        time: 25,
+        difficulty: "Easy",
+        image: "https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=700&q=80",
+        description: "Tender chickpeas simmered in a spiced tomato gravy with cumin, garlic, and onions.",
+        ingredients: ["chickpeas", "tomatoes", "onion", "garlic", "curry powder", "cumin", "olive oil"],
+        steps: [
+          "Sauté diced onions in olive oil until golden brown.",
+          "Add minced garlic, cumin, and curry powder; stir for 1 minute.",
+          "Add diced tomatoes and simmer for 5 minutes until reduced.",
+          "Add rinsed chickpeas and 1/2 cup of water, simmer on medium-low for 15 minutes.",
+          "Crush a few chickpeas with the back of a spoon to thicken the curry."
+        ]
+      },
+      {
+        id: 35,
+        title: "Creamy Tomato Penne",
+        cuisine: "Italian",
+        time: 18,
+        difficulty: "Easy",
+        image: "https://images.unsplash.com/photo-1551183053-bf91a1d81141?auto=format&fit=crop&w=700&q=80",
+        description: "Penne pasta bathed in a luscious pink sauce combining tangy tomatoes and silky heavy cream.",
+        ingredients: ["pasta", "tomatoes", "heavy cream", "garlic", "butter", "parmesan"],
+        steps: [
+          "Boil penne pasta in salted water until al dente.",
+          "Melt butter and sauté minced garlic in a large skillet.",
+          "Add tomato purée and simmer for 5 minutes.",
+          "Pour in heavy cream, stirring until sauce turns a smooth blush pink.",
+          "Toss pasta and grated parmesan into sauce until evenly coated."
+        ]
+      },
+      {
+        id: 36,
+        title: "Crispy Egg Fried Noodles",
+        cuisine: "Asian",
+        time: 15,
+        difficulty: "Easy",
+        image: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=700&q=80",
+        description: "Stir-fried noodles tossed with scrambled eggs, soy sauce, garlic, and green vegetables.",
+        ingredients: ["noodles", "eggs", "soy sauce", "garlic", "sesame oil", "onion"],
+        steps: [
+          "Cook noodles according to package, drain and rinse under cold water.",
+          "Scramble eggs in a hot wok with oil; remove and set aside.",
+          "Sauté sliced onions and garlic until fragrant.",
+          "Add noodles, tossing vigorously over high heat.",
+          "Drizzle soy sauce and sesame oil, fold in cooked eggs, and stir-fry for 2 minutes."
+        ]
+      },
+      {
+        id: 37,
+        title: "Roasted Tomato Bruschetta",
+        cuisine: "Italian",
+        time: 15,
+        difficulty: "Easy",
+        image: "https://images.unsplash.com/photo-1572695157366-5e585ab2b69f?auto=format&fit=crop&w=700&q=80",
+        description: "Toasted garlic bread topped with marinated sweet diced tomatoes, fresh basil, and olive oil.",
+        ingredients: ["bread", "tomatoes", "garlic", "olive oil", "basil", "black pepper"],
+        steps: [
+          "Dice tomatoes small; toss with minced garlic, chopped fresh basil, olive oil, and salt.",
+          "Let tomato mixture rest for 10 minutes for flavors to meld.",
+          "Toast bread slices until golden brown; lightly rub a raw garlic clove over the warm surface.",
+          "Spoon marinated tomatoes over the bread slices and serve right away."
+        ]
+      },
+      {
+        id: 38,
+        title: "Savory Breakfast Burrito",
+        cuisine: "Mexican",
+        time: 15,
+        difficulty: "Easy",
+        image: "https://images.unsplash.com/photo-1626700051175-6818013e1d4f?auto=format&fit=crop&w=700&q=80",
+        description: "Soft warm tortilla wrapped around fluffy scrambled eggs, melted cheese, bacon, and salsa.",
+        ingredients: ["tortillas", "eggs", "cheddar", "bacon", "tomatoes", "butter"],
+        steps: [
+          "Fry bacon until crispy, then chop into bite-sized pieces.",
+          "Melt butter in a pan and gently soft-scramble eggs.",
+          "Warm the tortilla in a dry skillet for 20 seconds.",
+          "Layer scrambled eggs, bacon, diced tomatoes, and shredded cheddar in the center.",
+          "Fold in the sides, roll tightly, and sear the seam in the pan for 1 minute."
+        ]
+      },
+      {
+        id: 39,
+        title: "Garlic Parmesan Mashed Potatoes",
+        cuisine: "American",
+        time: 25,
+        difficulty: "Easy",
+        image: "https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&w=700&q=80",
+        description: "Fluffy, creamy mashed potatoes whipped with melted butter, roasted garlic, and savory parmesan.",
+        ingredients: ["potatoes", "butter", "milk", "garlic", "parmesan", "black pepper"],
+        steps: [
+          "Peel and cube potatoes, boil in salted water for 15 minutes until tender.",
+          "Drain water completely and return potatoes to the warm pot.",
+          "Add butter, warm milk, and minced sautéed garlic.",
+          "Mash with a potato masher until fluffy.",
+          "Stir in grated parmesan cheese and black pepper until smooth."
+        ]
+      },
+      {
+        id: 40,
+        title: "Lemon Butter Salmon",
+        cuisine: "Mediterranean",
+        time: 15,
+        difficulty: "Medium",
+        image: "https://images.unsplash.com/photo-1467003909585-2f8a72700288?auto=format&fit=crop&w=700&q=80",
+        description: "Crispy pan-seared salmon fillet finished with an aromatic garlic and lemon butter pan reduction.",
+        ingredients: ["salmon", "butter", "lemon", "garlic", "olive oil", "parsley"],
+        steps: [
+          "Pat salmon dry with paper towels and season with salt and pepper.",
+          "Heat olive oil in a skillet over medium-high heat until shimmering.",
+          "Place salmon skin-side down; cook undisturbed for 4-5 minutes until crispy.",
+          "Flip salmon, add butter, minced garlic, and lemon juice into pan.",
+          "Baste the melted garlic lemon butter over salmon for 2 minutes until cooked to medium."
+        ]
+      },
+      {
+        id: 41,
+        title: "Stuffed Bell Peppers",
+        cuisine: "American",
+        time: 40,
+        difficulty: "Medium",
+        image: "https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=700&q=80",
+        description: "Sweet bell pepper halves filled with seasoned ground beef, rice, tomato sauce, and melted cheddar.",
+        ingredients: ["bell pepper", "ground beef", "rice", "cheddar", "onion", "tomatoes"],
+        steps: [
+          "Preheat oven to 375°F (190°C). Cut bell peppers in half and remove seeds.",
+          "Brown ground beef and onions in a pan; stir in cooked rice and diced tomatoes.",
+          "Season mixture with salt and pepper.",
+          "Spoon meat and rice filling generously into the bell pepper halves.",
+          "Top with cheddar cheese and bake for 25-30 minutes until peppers are tender."
+        ]
+      },
+      {
+        id: 42,
+        title: "Banana Butter Pancakes",
+        cuisine: "Breakfast",
+        time: 15,
+        difficulty: "Easy",
+        image: "https://images.unsplash.com/photo-1528207776546-365bb710ee93?auto=format&fit=crop&w=700&q=80",
+        description: "Naturally sweet pancakes infused with ripe mashed bananas, cinnamon, and melted butter.",
+        ingredients: ["banana", "eggs", "flour", "milk", "butter", "cinnamon"],
+        steps: [
+          "Mash ripe banana in a bowl until smooth.",
+          "Whisk in eggs, milk, and melted butter.",
+          "Fold in flour and cinnamon until combined into a pancake batter.",
+          "Ladle portions onto a buttered hot pan over medium heat.",
+          "Cook until bubbly, flip, and cook until golden brown on both sides."
+        ]
+      },
+      {
+        id: 43,
+        title: "Creamy Chicken Mushroom Pasta",
+        cuisine: "Italian",
+        time: 25,
+        difficulty: "Medium",
+        image: "https://images.unsplash.com/photo-1612874742237-6526221588e3?auto=format&fit=crop&w=700&q=80",
+        description: "Seared chicken bites and earthy sliced mushrooms tossed with pasta in garlic cream sauce.",
+        ingredients: ["pasta", "chicken", "mushrooms", "heavy cream", "garlic", "butter", "parmesan"],
+        steps: [
+          "Cook pasta in salted water until al dente.",
+          "In a large skillet, melt butter and cook seasoned chicken cubes until browned; set aside.",
+          "Sauté sliced mushrooms and garlic in the remaining juices until caramelized.",
+          "Pour in heavy cream and grated parmesan, simmering until thickened.",
+          "Combine pasta, seared chicken, and sauce, tossing to coat evenly."
+        ]
+      },
+      {
+        id: 44,
+        title: "Cheesy Broccoli Soup",
+        cuisine: "American",
+        time: 25,
+        difficulty: "Easy",
+        image: "https://images.unsplash.com/photo-1547592166-23ac45744acd?auto=format&fit=crop&w=700&q=80",
+        description: "Comforting, velvety cheese soup packed with tender chopped broccoli florets and sharp cheddar.",
+        ingredients: ["broccoli", "cheddar", "milk", "butter", "flour", "onion", "garlic"],
+        steps: [
+          "Melt butter in a pot and cook diced onions and garlic until fragrant.",
+          "Whisk in flour for 1 minute, then slowly whisk in milk until smooth and simmering.",
+          "Add chopped broccoli florets; cook covered for 10-12 minutes until tender.",
+          "Use a potato masher to break broccoli down into small savory bits.",
+          "Turn off heat and stir in sharp cheddar cheese until melted and velvety."
+        ]
+      },
+      {
+        id: 45,
+        title: "Pan-Seared Honey Mustard Chicken",
+        cuisine: "American",
+        time: 20,
+        difficulty: "Easy",
+        image: "https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?auto=format&fit=crop&w=700&q=80",
+        description: "Golden juicy chicken breasts glazed with sweet honey, sharp Dijon mustard, and garlic.",
+        ingredients: ["chicken", "honey", "mustard", "garlic", "olive oil", "butter"],
+        steps: [
+          "Mix honey, mustard, minced garlic, and a pinch of salt in a small dish.",
+          "Season chicken breasts and sear in olive oil for 5-6 minutes per side until cooked through.",
+          "Add butter and the honey-mustard mixture into the pan.",
+          "Spoon the bubbling glaze repeatedly over the chicken for 2 minutes until glossy.",
+          "Serve chicken warm with extra pan glaze drizzled over top."
+        ]
+      },
+      {
+        id: 46,
+        title: "Berry Banana Smoothie Bowl",
+        cuisine: "Breakfast",
+        time: 5,
+        difficulty: "Easy",
+        image: "https://images.unsplash.com/photo-1511690656952-34342bb7c2f2?auto=format&fit=crop&w=700&q=80",
+        description: "Thick and energizing fruit bowl made from blended frozen banana, milk, and honey.",
+        ingredients: ["banana", "milk", "honey", "berries"],
+        steps: [
+          "Place frozen banana chunks and berries into a high-speed blender.",
+          "Pour in milk and a drizzle of honey.",
+          "Blend on high until thick, creamy, and smooth like soft-serve ice cream.",
+          "Pour into a bowl and garnish with fresh fruit slices."
+        ]
+      },
+      {
+        id: 47,
+        title: "Sautéed Garlic Green Beans",
+        cuisine: "Mediterranean",
+        time: 12,
+        difficulty: "Easy",
+        image: "https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=700&q=80",
+        description: "Tender-crisp fresh green beans quickly blistered in olive oil with slivered garlic and lemon.",
+        ingredients: ["green beans", "garlic", "butter", "olive oil", "lemon", "black pepper"],
+        steps: [
+          "Trim stem ends from green beans.",
+          "Heat olive oil in a skillet over medium-high heat.",
+          "Add green beans with 2 tbsp of water, cover for 3 minutes to steam.",
+          "Remove cover, add butter and thinly sliced garlic, frying for 3 minutes until blistered.",
+          "Finish with a squeeze of fresh lemon juice, salt, and pepper."
+        ]
+      },
+      {
+        id: 48,
+        title: "Cheesy Bacon Scrambled Eggs",
+        cuisine: "Breakfast",
+        time: 8,
+        difficulty: "Easy",
+        image: "https://images.unsplash.com/photo-1525351484163-7529414344d8?auto=format&fit=crop&w=700&q=80",
+        description: "Silky, tender scrambled eggs folded with crisp smoky bacon and gooey melted cheddar.",
+        ingredients: ["eggs", "bacon", "cheddar", "butter", "black pepper"],
+        steps: [
+          "Chop bacon and fry in a pan until crispy; drain on a paper towel.",
+          "Beat eggs in a bowl with salt and pepper.",
+          "Melt butter in a nonstick pan over gentle low heat.",
+          "Pour in eggs, pushing gently with a spatula from edges to center to create soft curds.",
+          "Fold in bacon bits and shredded cheddar right before eggs finish setting."
+        ]
+      },
+      {
+        id: 49,
+        title: "Simple Garlic Butter Rice",
+        cuisine: "Asian",
+        time: 18,
+        difficulty: "Easy",
+        image: "https://images.unsplash.com/photo-1512058564366-18510be2db19?auto=format&fit=crop&w=700&q=80",
+        description: "Steamed rice tossed with golden caramelized garlic, melted butter, and a dash of soy sauce.",
+        ingredients: ["rice", "garlic", "butter", "soy sauce", "black pepper"],
+        steps: [
+          "Melt generous butter in a frying pan over medium heat.",
+          "Add thinly sliced garlic and fry until golden and aromatic (do not burn).",
+          "Add cooked warm rice and toss thoroughly to coat each grain in garlic butter.",
+          "Drizzle in soy sauce and freshly cracked black pepper.",
+          "Stir-fry for 2 minutes and serve as a fragrant side dish."
+        ]
+      },
+      {
+        id: 50,
+        title: "Golden Cinnamon Apple Crisp",
+        cuisine: "Dessert",
+        time: 35,
+        difficulty: "Easy",
+        image: "https://images.unsplash.com/photo-1568571780765-9276ac8b75a2?auto=format&fit=crop&w=700&q=80",
+        description: "Warm spiced tender apples baked under a crunchy golden oat, butter, and cinnamon crumble.",
+        ingredients: ["apple", "flour", "butter", "sugar", "cinnamon"],
+        steps: [
+          "Preheat oven to 375°F (190°C).",
+          "Peel, core, and slice apples; toss with 1 tbsp sugar and 1 tsp cinnamon, spread into a baking dish.",
+          "In a bowl, mix flour, remaining sugar, cinnamon, and cold diced butter with fingers until crumbly.",
+          "Spread crumble evenly over the apples.",
+          "Bake for 25-30 minutes until bubbly and the topping is golden brown."
+        ]
+      }
+    ];
+
+    // Popular staples for fast clicking
+    const POPULAR_STAPLES = [
+      "eggs", "chicken", "garlic", "onion", "tomatoes", "rice", "pasta", 
+      "butter", "olive oil", "cheddar", "parmesan", "potatoes", "bacon", 
+      "bread", "milk", "lemon", "bell pepper", "soy sauce", "spinach"
+    ];
+
+    // Extract all distinct ingredients across all recipes for autocomplete
+    const ALL_INGREDIENTS = Array.from(new Set(
+      RECIPES.flatMap(r => r.ingredients.map(i => i.toLowerCase().trim()))
+    )).sort();
+
+    // Application state
+    let pantry = new Set(["eggs", "garlic", "onion", "olive oil", "butter"]);
+    let currentSearchTerm = "";
+    let activeModalRecipeId = null;
+
+    function initApp() {
+      // Load saved pantry if present
+      try {
+        const saved = localStorage.getItem("pantryChef_pantry");
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            pantry = new Set(parsed.map(x => x.toLowerCase().trim()));
+          }
+        }
+      } catch (e) {
+        console.error("Storage error:", e);
+      }
+
+      renderQuickStaples();
+      updatePantryUI();
+      renderRecipes();
+      setupAutocomplete();
+      setupTheme();
+    }
+
+    // Save pantry to localStorage
+    function persistPantry() {
+      try {
+        localStorage.setItem("pantryChef_pantry", JSON.stringify(Array.from(pantry)));
+      } catch (e) {
+        console.error("Storage error:", e);
+      }
+    }
+
+    function renderQuickStaples() {
+      const container = document.getElementById("quick-staples");
+      container.innerHTML = POPULAR_STAPLES.map(staple => {
+        const hasIt = pantry.has(staple.toLowerCase());
+        return `
+          <button 
+            onclick="togglePantryItem('${staple}')"
+            class="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 border ${
+              hasIt 
+                ? 'bg-orange-500 text-white border-orange-600 shadow-sm' 
+                : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-orange-400'
+            }"
+          >
+            <i class="fa-solid ${hasIt ? 'fa-check' : 'fa-plus'} text-[10px]"></i>
+            <span class="capitalize">${staple}</span>
+          </button>
+        `;
+      }).join('');
+    }
+
+    function updatePantryUI() {
+      const container = document.getElementById("pantry-chips-container");
+      const emptyHint = document.getElementById("empty-pantry-hint");
+      const countEl = document.getElementById("pantry-count");
+      const headerCountEl = document.getElementById("header-pantry-count");
+      const matchSummaryEl = document.getElementById("match-summary");
+
+      const items = Array.from(pantry).sort();
+      countEl.textContent = items.length;
+      headerCountEl.textContent = items.length;
+
+      if (items.length === 0) {
+        container.innerHTML = '';
+        container.appendChild(emptyHint);
+        emptyHint.classList.remove('hidden');
+        matchSummaryEl.textContent = "Add ingredients to unlock suggestions";
+      } else {
+        emptyHint.classList.add('hidden');
+        container.innerHTML = items.map(item => `
+          <span class="ingredient-badge-enter inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-orange-100 dark:bg-orange-950/70 text-orange-900 dark:text-orange-200 text-xs font-bold border border-orange-200 dark:border-orange-800">
+            <span class="capitalize">${item}</span>
+            <button onclick="removeIngredient('${item}')" class="hover:text-rose-600 ml-0.5 focus:outline-none" title="Remove ${item}">
+              <i class="fa-solid fa-xmark text-xs"></i>
+            </button>
+          </span>
+        `).join('');
+
+        // Count how many recipes are fully ready
+        const fullMatches = RECIPES.filter(r => {
+          const missing = r.ingredients.filter(ing => !pantry.has(ing.toLowerCase().trim()));
+          return missing.length === 0;
+        }).length;
+
+        matchSummaryEl.innerHTML = fullMatches > 0 
+          ? `<i class="fa-solid fa-fire text-amber-500 mr-1"></i><strong>${fullMatches} recipes</strong> 100% ready to cook!`
+          : "Matches updating in real time";
+      }
+
+      renderQuickStaples();
+      persistPantry();
+    }
+
+    function togglePantryItem(name) {
+      const clean = name.toLowerCase().trim();
+      if (pantry.has(clean)) {
+        pantry.delete(clean);
+        showToast(`Removed "${clean}"`);
+      } else {
+        pantry.add(clean);
+        showToast(`Added "${clean}"`);
+      }
+      updatePantryUI();
+      renderRecipes();
+    }
+
+    function addIngredientFromInput() {
+      const input = document.getElementById("ingredient-input");
+      const val = input.value.trim().toLowerCase();
+      if (!val) return;
+
+      if (pantry.has(val)) {
+        showToast(`"${val}" is already in your pantry`);
+      } else {
+        pantry.add(val);
+        showToast(`Added "${val}" to pantry`);
+        updatePantryUI();
+        renderRecipes();
+      }
+      input.value = "";
+      document.getElementById("autocomplete-list").classList.add("hidden");
+    }
+
+    function removeIngredient(item) {
+      pantry.delete(item.toLowerCase().trim());
+      updatePantryUI();
+      renderRecipes();
+      showToast(`Removed "${item}"`);
+    }
+
+    function clearPantry() {
+      pantry.clear();
+      updatePantryUI();
+      renderRecipes();
+      showToast("Cleared pantry");
+    }
+
+    function samplePantry() {
+      pantry = new Set(["pasta", "tomatoes", "garlic", "olive oil", "butter", "parmesan", "black pepper", "basil", "eggs", "bacon"]);
+      updatePantryUI();
+      renderRecipes();
+      showToast("Loaded Italian pantry kit!");
+    }
+
+    function setupAutocomplete() {
+      const input = document.getElementById("ingredient-input");
+      const list = document.getElementById("autocomplete-list");
+
+      input.addEventListener("input", () => {
+        const query = input.value.toLowerCase().trim();
+        if (!query) {
+          list.classList.add("hidden");
+          return;
+        }
+
+        const matches = ALL_INGREDIENTS.filter(item => 
+          item.toLowerCase().includes(query) && !pantry.has(item)
+        ).slice(0, 6);
+
+        if (matches.length === 0) {
+          list.classList.add("hidden");
+          return;
+        }
+
+        list.innerHTML = matches.map(m => `
+          <div class="px-4 py-2 hover:bg-orange-50 dark:hover:bg-slate-700 cursor-pointer flex items-center justify-between" onclick="selectAutocomplete('${m}')">
+            <span class="capitalize font-medium">${m}</span>
+            <i class="fa-solid fa-plus text-orange-500 text-xs"></i>
+          </div>
+        `).join('');
+        list.classList.remove("hidden");
+      });
+
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          addIngredientFromInput();
+        }
+      });
+
+      document.addEventListener("click", (e) => {
+        if (!input.contains(e.target) && !list.contains(e.target)) {
+          list.classList.add("hidden");
+        }
+      });
+    }
+
+    function selectAutocomplete(val) {
+      document.getElementById("ingredient-input").value = val;
+      addIngredientFromInput();
+    }
+
+    function calculateRecipeMatch(recipe) {
+      const total = recipe.ingredients.length;
+      const matched = recipe.ingredients.filter(ing => pantry.has(ing.toLowerCase().trim()));
+      const missing = recipe.ingredients.filter(ing => !pantry.has(ing.toLowerCase().trim()));
+      const percentage = Math.round((matched.length / total) * 100);
+
+      return {
+        matched,
+        missing,
+        total,
+        percentage
+      };
+    }
+
+    function handleRecipeSearch() {
+      currentSearchTerm = document.getElementById("recipe-search").value.toLowerCase().trim();
+      renderRecipes();
+    }
+
+    function renderRecipes() {
+      const cuisineFilter = document.getElementById("cuisine-filter").value;
+      const timeFilter = document.getElementById("time-filter").value;
+      const matchFilter = document.getElementById("match-filter").value;
+      const sortSelect = document.getElementById("sort-select").value;
+
+      const grid = document.getElementById("recipes-grid");
+      const noResults = document.getElementById("no-recipes-state");
+      const countBadge = document.getElementById("results-count-badge");
+
+      // Score and augment each recipe
+      let list = RECIPES.map(recipe => {
+        const matchData = calculateRecipeMatch(recipe);
+        return {
+          ...recipe,
+          ...matchData
+        };
+      });
+
+      // Search term filter
+      if (currentSearchTerm) {
+        list = list.filter(r => 
+          r.title.toLowerCase().includes(currentSearchTerm) ||
+          r.cuisine.toLowerCase().includes(currentSearchTerm) ||
+          r.ingredients.some(i => i.toLowerCase().includes(currentSearchTerm))
+        );
+      }
+
+      // Cuisine filter
+      if (cuisineFilter !== "all") {
+        list = list.filter(r => r.cuisine.toLowerCase() === cuisineFilter.toLowerCase());
+      }
+
+      // Time filter
+      if (timeFilter !== "all") {
+        const maxTime = parseInt(timeFilter, 10);
+        list = list.filter(r => r.time <= maxTime);
+      }
+
+      // Match filter
+      if (matchFilter === "ready") {
+        list = list.filter(r => r.missing.length === 0);
+      } else if (matchFilter === "missing1") {
+        list = list.filter(r => r.missing.length <= 1);
+      } else if (matchFilter === "missing2") {
+        list = list.filter(r => r.missing.length <= 2);
+      }
+
+      // Sorting
+      list.sort((a, b) => {
+        if (sortSelect === "match-desc") {
+          if (b.percentage !== a.percentage) return b.percentage - a.percentage;
+          return a.missing.length - b.missing.length;
+        }
+        if (sortSelect === "time-asc") {
+          return a.time - b.time;
+        }
+        if (sortSelect === "diff-asc") {
+          const diffRank = { "Easy": 1, "Medium": 2, "Hard": 3 };
+          return (diffRank[a.difficulty] || 2) - (diffRank[b.difficulty] || 2);
+        }
+        if (sortSelect === "title-asc") {
+          return a.title.localeCompare(b.title);
+        }
+        return 0;
+      });
+
+      countBadge.textContent = `${list.length} available`;
+
+      if (list.length === 0) {
+        grid.innerHTML = "";
+        noResults.classList.remove("hidden");
+        return;
+      }
+
+      noResults.classList.add("hidden");
+
+      // Generate recipe cards
+      grid.innerHTML = list.map(recipe => {
+        const isReady = recipe.missing.length === 0;
+        const missingCount = recipe.missing.length;
+
+        // Badge styling based on match strength
+        let badgeBg = "bg-emerald-500 text-white";
+        let badgeText = "100% Match • Ready!";
+        let badgeIcon = "fa-check";
+
+        if (isReady) {
+          badgeBg = "bg-emerald-600 text-white shadow-md shadow-emerald-600/30";
+          badgeText = "Ready to cook!";
+          badgeIcon = "fa-utensils";
+        } else if (missingCount === 1) {
+          badgeBg = "bg-amber-500 text-white";
+          badgeText = "Need 1 ingredient";
+          badgeIcon = "fa-triangle-exclamation";
+        } else if (missingCount === 2) {
+          badgeBg = "bg-orange-500 text-white";
+          badgeText = "Need 2 ingredients";
+          badgeIcon = "fa-basket-shopping";
+        } else {
+          badgeBg = "bg-slate-700/80 text-white backdrop-blur-md";
+          badgeText = `${recipe.percentage}% Match (${missingCount} missing)`;
+          badgeIcon = "fa-circle-half-stroke";
+        }
+
+        return `
+          <div 
+            onclick="openRecipeModal(${recipe.id})" 
+            class="group cursor-pointer bg-white dark:bg-slate-900 rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col h-full"
+          >
+            <!-- Card Image Box -->
+            <div class="relative h-48 overflow-hidden bg-slate-100 dark:bg-slate-800">
+              <img 
+                src="${recipe.image}" 
+                alt="${recipe.title}" 
+                loading="lazy" 
+                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                onerror="this.src='https://placehold.co/600x400/ea580c/white?text=Delicious+Food'"
+              >
+              <div class="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-black/20"></div>
+              
+              <!-- Match badge top-left -->
+              <div class="absolute top-3 left-3">
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${badgeBg}">
+                  <i class="fa-solid ${badgeIcon} text-[10px]"></i>
+                  <span>${badgeText}</span>
+                </span>
+              </div>
+
+              <!-- Cuisine Pill top-right -->
+              <div class="absolute top-3 right-3">
+                <span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-black/60 text-white backdrop-blur-md">
+                  ${recipe.cuisine}
+                </span>
+              </div>
+
+              <!-- Title & quick time over image -->
+              <div class="absolute bottom-3 left-3 right-3 text-white">
+                <h4 class="font-bold text-base line-clamp-1 group-hover:text-orange-300 transition-colors">${recipe.title}</h4>
+                <div class="flex items-center gap-3 text-xs text-slate-200 mt-0.5">
+                  <span class="flex items-center gap-1"><i class="fa-regular fa-clock text-orange-400"></i> ${recipe.time}m</span>
+                  <span>•</span>
+                  <span><i class="fa-solid fa-gauge-high text-amber-400"></i> ${recipe.difficulty}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Card Content -->
+            <div class="p-4 flex-1 flex flex-col justify-between">
+              <!-- Ingredients summary -->
+              <div class="mb-3">
+                <div class="flex items-center justify-between text-xs mb-1.5">
+                  <span class="font-bold text-slate-500 dark:text-slate-400">Ingredients (${recipe.matched.length}/${recipe.total})</span>
+                  <span class="font-extrabold ${isReady ? 'text-emerald-600 dark:text-emerald-400' : 'text-orange-600 dark:text-orange-400'}">${recipe.percentage}%</span>
+                </div>
+                <!-- Progress bar -->
+                <div class="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2 overflow-hidden mb-3">
+                  <div 
+                    class="h-full rounded-full transition-all duration-500 ${isReady ? 'bg-emerald-500' : recipe.percentage >= 60 ? 'bg-orange-500' : 'bg-amber-400'}" 
+                    style="width: ${recipe.percentage}%"
+                  ></div>
+                </div>
+
+                <!-- Missing list or ready message -->
+                ${isReady ? `
+                  <div class="text-xs font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1.5 rounded-xl border border-emerald-200/50 dark:border-emerald-800/40">
+                    <i class="fa-solid fa-circle-check"></i>
+                    <span>You have all ingredients! Ready to make.</span>
+                  </div>
+                ` : `
+                  <div class="text-xs text-slate-500 dark:text-slate-400 line-clamp-1">
+                    <span class="text-rose-500 font-semibold">Missing:</span> ${recipe.missing.join(', ')}
+                  </div>
+                `}
+              </div>
+
+              <!-- Button footer -->
+              <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
+                <span class="text-orange-600 dark:text-orange-400 font-bold group-hover:underline flex items-center gap-1">
+                  View Full Recipe <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                </span>
+                <span class="text-[11px] text-slate-400">${recipe.ingredients.length} items</span>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function resetFilters() {
+      document.getElementById("recipe-search").value = "";
+      document.getElementById("cuisine-filter").value = "all";
+      document.getElementById("time-filter").value = "all";
+      document.getElementById("match-filter").value = "all";
+      document.getElementById("sort-select").value = "match-desc";
+      currentSearchTerm = "";
+      renderRecipes();
+      showToast("Reset all filters");
+    }
+
+    function openRecipeModal(recipeId) {
+      const recipe = RECIPES.find(r => r.id === recipeId);
+      if (!recipe) return;
+
+      activeModalRecipeId = recipeId;
+      const matchData = calculateRecipeMatch(recipe);
+
+      document.getElementById("modal-image").src = recipe.image;
+      document.getElementById("modal-title").textContent = recipe.title;
+      document.getElementById("modal-category").textContent = recipe.cuisine;
+      document.getElementById("modal-time").textContent = `${recipe.time} mins`;
+      document.getElementById("modal-difficulty").textContent = recipe.difficulty;
+      document.getElementById("modal-desc").textContent = recipe.description;
+      document.getElementById("modal-ing-ratio").textContent = `${matchData.matched.length} of ${matchData.total} in pantry (${matchData.percentage}%)`;
+
+      const matchBadge = document.getElementById("modal-match-badge");
+      if (matchData.missing.length === 0) {
+        matchBadge.className = "px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500 text-white";
+        matchBadge.textContent = "100% Ready To Cook";
+      } else {
+        matchBadge.className = "px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-500 text-white";
+        matchBadge.textContent = `Missing ${matchData.missing.length} item${matchData.missing.length > 1 ? 's' : ''}`;
+      }
+
+      // Build ingredients list with interactive tap-to-add
+      const ingList = document.getElementById("modal-ingredients-list");
+      ingList.innerHTML = recipe.ingredients.map(ing => {
+        const hasIt = pantry.has(ing.toLowerCase().trim());
+        return `
+          <li class="flex items-center justify-between p-2.5 rounded-xl border ${hasIt ? 'bg-emerald-50/70 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800 text-emerald-900 dark:text-emerald-200' : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'}">
+            <div class="flex items-center gap-2.5 text-xs font-medium">
+              <i class="fa-solid ${hasIt ? 'fa-check text-emerald-500' : 'fa-circle-xmark text-rose-400'}"></i>
+              <span class="capitalize ${hasIt ? 'font-bold' : ''}">${ing}</span>
+            </div>
+            ${hasIt ? `
+              <span class="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">In Pantry</span>
+            ` : `
+              <button onclick="addModalIngredient('${ing}')" class="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-orange-600 hover:bg-orange-700 text-white transition-all shadow-sm">
+                + Add to Pantry
+              </button>
+            `}
+          </li>
+        `;
+      }).join('');
+
+      // Build steps list
+      const stepsList = document.getElementById("modal-steps-list");
+      stepsList.innerHTML = recipe.steps.map((step, idx) => `
+        <li class="flex gap-3 text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+          <span class="flex-shrink-0 w-6 h-6 rounded-full bg-orange-100 dark:bg-orange-950/60 text-orange-600 font-bold flex items-center justify-center text-xs">
+            ${idx + 1}
+          </span>
+          <p class="pt-0.5">${step}</p>
+        </li>
+      `).join('');
+
+      // Show modal with animation
+      const modal = document.getElementById("recipe-modal");
+      const box = document.getElementById("recipe-modal-box");
+      modal.classList.remove("hidden");
+      setTimeout(() => {
+        box.classList.remove("scale-95", "opacity-0");
+        box.classList.add("scale-100", "opacity-100");
+      }, 10);
+      document.body.style.overflow = "hidden";
+    }
+
+    function addModalIngredient(ing) {
+      pantry.add(ing.toLowerCase().trim());
+      updatePantryUI();
+      renderRecipes();
+      if (activeModalRecipeId) {
+        openRecipeModal(activeModalRecipeId); // refresh modal view
+      }
+      showToast(`Added "${ing}" to pantry`);
+    }
+
+    function closeModal() {
+      const modal = document.getElementById("recipe-modal");
+      const box = document.getElementById("recipe-modal-box");
+      box.classList.remove("scale-100", "opacity-100");
+      box.classList.add("scale-95", "opacity-0");
+      setTimeout(() => {
+        modal.classList.add("hidden");
+        document.body.style.overflow = "auto";
+        activeModalRecipeId = null;
+      }, 200);
+    }
+
+    function copyRecipeIngredients() {
+      if (!activeModalRecipeId) return;
+      const recipe = RECIPES.find(r => r.id === activeModalRecipeId);
+      if (!recipe) return;
+
+      const text = `${recipe.title} - Ingredients:\n` + recipe.ingredients.map(i => `• ${i}`).join('\n');
+      
+      const textArea = document.createElement("textarea");
+      textArea.value = text;
+      textArea.style.position = "fixed";
+      textArea.style.left = "-999999px";
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      
+      try {
+        document.execCommand('copy');
+        showToast("Shopping list copied to clipboard!");
+      } catch (err) {
+        showToast("Failed to copy text.");
+      }
+      document.body.removeChild(textArea);
+    }
+
+    let toastTimer;
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      const msg = document.getElementById("toast-message");
+      msg.textContent = message;
+
+      clearTimeout(toastTimer);
+      toast.classList.remove("translate-y-20", "opacity-0");
+      toast.classList.add("translate-y-0", "opacity-100");
+
+      toastTimer = setTimeout(() => {
+        toast.classList.remove("translate-y-0", "opacity-100");
+        toast.classList.add("translate-y-20", "opacity-0");
+      }, 2400);
+    }
+
+    function scrollToPantry() {
+      document.getElementById("pantry-section").scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function setupTheme() {
+      const toggle = document.getElementById("theme-toggle");
+      const isDark = localStorage.getItem("pantryChef_theme") === "dark" || 
+        (!("pantryChef_theme" in localStorage) && window.matchMedia("(prefers-color-scheme: dark)").matches);
+
+      if (isDark) {
+        document.documentElement.classList.add("dark");
+      } else {
+        document.documentElement.classList.remove("dark");
+      }
+
+      toggle.addEventListener("click", () => {
+        const currentlyDark = document.documentElement.classList.toggle("dark");
+        localStorage.setItem("pantryChef_theme", currentlyDark ? "dark" : "light");
+      });
+    }
+
+    // Close modal on escape key or backdrop click
+    document.getElementById("recipe-modal").addEventListener("click", (e) => {
+      if (e.target.id === "recipe-modal") {
+        closeModal();
+      }
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && activeModalRecipeId) {
+        closeModal();
+      }
+    });
+
+    // Run on page load
+    window.addEventListener("DOMContentLoaded", initApp);
+  </script>
+</body>
+</html>
